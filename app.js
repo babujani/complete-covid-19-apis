@@ -66,9 +66,9 @@ app.get("/matches/:matchId/", async (request, response) => {
 app.get("/players/:playerId/matches", async (request, response) => {
   const { playerId } = request.params;
   const getPlayerMatchesQuery = `
-    SELECT match_details.match_id AS matchId,
-    match_details.match AS match, match_details.year AS year
-    FROM  player_match_score left join match_details
+    SELECT match_id AS matchId,
+    match , year
+    FROM  player_match_score natural join match_details
     WHERE player_id = ${playerId} 
     ;`;
   const playerMatchDetails = await db.all(getPlayerMatchesQuery);
@@ -78,9 +78,9 @@ app.get("/players/:playerId/matches", async (request, response) => {
 app.get("/matches/:matchId/players", async (request, response) => {
   const { matchId } = request.params;
   const playersOfMatchQuery = `
-    SELECT player_details.player_id AS playerId, player_details.player_name AS playerName
-    FROM player_details left join match_details left join player_match_score
-    where match_details.match_id=${matchId}
+    SELECT player_id AS playerId, player_name AS playerName
+    FROM  player_match_score natural join player_details
+    where match_id=${matchId}
     ;`;
   playersOfmatch = await db.all(playersOfMatchQuery);
   response.send(playersOfmatch);
@@ -89,11 +89,11 @@ app.get("/matches/:matchId/players", async (request, response) => {
 app.get("/players/:playerId/playerScores", async (request, response) => {
   const { playerId } = request.params;
   const playerScoresQuery = `
-    SELECT player_details.player_id AS playerId,
-    player_details.player_name AS playerName,
-    sum(score) AS totalScore,count(fours) AS totalFours,count(sixes) AS totalSixes
-    FROM player_details join player_match_score
-    WHERE player_details.player_id=${playerId} 
+    SELECT player_id AS playerId,
+    player_name AS playerName,
+    sum(score) AS totalScore,sum(fours) AS totalFours,sum(sixes) AS totalSixes
+    FROM  player_match_score NATURAL JOIN player_details
+    WHERE player_id=${playerId} 
     ;`;
   const playerTotalScore = await db.get(playerScoresQuery);
   response.send(playerTotalScore);
